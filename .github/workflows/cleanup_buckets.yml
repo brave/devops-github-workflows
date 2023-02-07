@@ -1,4 +1,4 @@
-name: Cleanup S3 buckets from deployed prs subfolders
+name: Cleanup S3 buckets from deployed pr subfolders
 
 on:
   workflow_call:
