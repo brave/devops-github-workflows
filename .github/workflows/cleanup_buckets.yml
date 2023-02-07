@@ -1,0 +1,80 @@
+name: Cleanup S3 buckets from deployed prs subfolders
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets:
+      S3_BUCKET_NAME:
+        required: true
+      AWS_ROLE_ARN:
+        required: true
+      AWS_REGION:
+        required: true
+
+jobs:
+  cleanup:
+    name: cleanup
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read # This is required for actions/checkout
+      pull-requests: read
+    environment:
+      name: ${{ inputs.environment }}
+    env:
+      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+
+    steps:
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: github-actions-basicattentiontoken-org-${{ github.triggering_actor }}-${{ github.run_id }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Cleanup
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const AWS = 'aws'
+            const BUCKET = '${{ secrets.S3_BUCKET_NAME }}'
+            const PREFIX_SELECTOR = 'pr-'
+            const AWS_LS_ARGS = ['s3', 'ls', `s3://${BUCKET}/${PREFIX_SELECTOR}`]
+            let aws_out = '';
+
+            const options = {};
+            options.listeners = {
+              stdout: (data) => {
+                aws_out += data.toString();
+              },
+            };
+
+            async function is_not_open(pr) {
+                let res = await github.rest.pulls.get({
+                    pull_number: pr,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                })
+                return res.data.state !== "open"
+            }
+
+            await exec.exec(AWS, AWS_LS_ARGS, options);
+
+            const pr_regex = /PRE pr-(\d+)\//g
+            const results = aws_out.matchAll(pr_regex);
+            let pr_buckets = [];
+            for(let result of results) {
+              pr_buckets.push(result[1])
+            }
+
+            const asyncFilter = (arr, predicate) => Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]));
+            const prefixes_to_delete = await asyncFilter(pr_buckets, is_not_open)
+            console.log("To be deleted", prefixes_to_delete)
+
+            for (const pr of prefixes_to_delete) {
+              const AWS_RM_ARGS = ['s3', 'rm', '--recursive', '--dryrun', `s3://${BUCKET}/${PREFIX_SELECTOR}${pr}`]
+              await exec.exec(AWS, AWS_RM_ARGS);
+            }
