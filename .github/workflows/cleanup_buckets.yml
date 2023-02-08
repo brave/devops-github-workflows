@@ -38,6 +38,7 @@ jobs:
       - name: Cleanup
         uses: actions/github-script@v6
         with:
+          retries: 10
           script: |
             const AWS = 'aws'
             const BUCKET = '${{ secrets.S3_BUCKET_NAME }}'
