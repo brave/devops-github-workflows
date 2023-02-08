@@ -45,6 +45,9 @@ jobs:
             const AWS_LS_ARGS = ['s3', 'ls', `s3://${BUCKET}/${PREFIX_SELECTOR}`]
             let aws_out = '';
 
+            await exec.exec(AWS, ['configure', 'set', 'default.s3.max_concurrent_requests', '100']);
+            await exec.exec(AWS, ['configure', 'set', 'default.s3.max_queue_size', '10000']);
+
             const options = {};
             options.listeners = {
               stdout: (data) => {
