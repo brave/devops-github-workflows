@@ -76,7 +76,7 @@ jobs:
 
             for (const pr of prefixes_to_delete) {
               console.log(`::group::Deleting ${PREFIX_SELECTOR}${pr}`)
-              const AWS_RM_ARGS = ['s3', 'rm', '--recursive', '--dryrun', `s3://${BUCKET}/${PREFIX_SELECTOR}${pr}`]
+              const AWS_RM_ARGS = ['s3', 'rm', '--recursive', `s3://${BUCKET}/${PREFIX_SELECTOR}${pr}`]
               await exec.exec(AWS, AWS_RM_ARGS);
               console.log('::endgroup::')
             }
