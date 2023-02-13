@@ -49,7 +49,7 @@ jobs:
             await exec.exec(AWS, ['configure', 'set', 'default.s3.max_concurrent_requests', '100']);
             await exec.exec(AWS, ['configure', 'set', 'default.s3.max_queue_size', '10000']);
 
-            const options = {};
+            const options = {ignoreReturnCode: true};
             options.listeners = {
               stdout: (data) => {
                 aws_out += data.toString();
@@ -65,7 +65,8 @@ jobs:
                 return res.data.state !== "open"
             }
 
-            await exec.exec(AWS, AWS_LS_ARGS, options);
+            const ls_res = await exec.exec(AWS, AWS_LS_ARGS, options);
+            if (lsres !== 0) { console.log("No garbage found. Exiting"); process.exit(); }
 
             const pr_regex = /PRE pr-(\d+)\//g
             const results = aws_out.matchAll(pr_regex);
