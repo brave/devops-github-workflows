@@ -66,7 +66,7 @@ jobs:
             }
 
             const ls_res = await exec.exec(AWS, AWS_LS_ARGS, options);
-            if (lsres !== 0) { console.log("No garbage found. Exiting"); process.exit(); }
+            if (ls_res !== 0) { console.log("No garbage found. Exiting"); process.exit(); }
 
             const pr_regex = /PRE pr-(\d+)\//g
             const results = aws_out.matchAll(pr_regex);
