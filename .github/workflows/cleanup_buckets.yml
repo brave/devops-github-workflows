@@ -29,14 +29,14 @@ jobs:
 
     steps:
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: github-actions-basicattentiontoken-org-${{ github.triggering_actor }}-${{ github.run_id }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Cleanup
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           retries: 10
           script: |
